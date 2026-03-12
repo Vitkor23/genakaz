@@ -7,6 +7,7 @@ import UI from './components/UI';
 import BonusGame from './components/BonusGame';
 import WithdrawOverlay from './components/WithdrawOverlay';
 import CommentRain from './components/CommentRain';
+import BonusRain from './components/BonusRain';
 
 // Import symbol images
 import happyImg from './components/img/happy.jpg';
@@ -41,10 +42,10 @@ const NVG1_COMMENTS = [
 ];
 
 const VASILI_COMMENTS = [
-  "VasiliEbanansky: БЕЙ ЧТО Ты КАК целка",
-  "VasiliEbanansky: конечно бей ставлю свой зуб",
-  "VasiliEbanansky: на мужщину бей",
-  "VasiliEbanansky: жопу ставлю пробаешь"
+  "VasiliEbanansky БЕЙ ЧТО Ты КАК целка",
+  "VasiliEbanansky конечно бей ставлю свой зуб",
+  "VasiliEbanansky на мужщину бей",
+  "VasiliEbanansky жопу ставлю пробаешь"
 ];
 
 const WIN_LINES = [
@@ -66,6 +67,7 @@ export default function App() {
   const [winningLines, setWinningLines] = useState([]);
   const [spinCount, setSpinCount] = useState(0);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [showBonusRain, setShowBonusRain] = useState(false);
   const rainRef = useRef(null);
 
   const changeBet = (delta) => {
@@ -91,24 +93,42 @@ export default function App() {
     const isBonusSpin = nextSpinCount >= 5;
     setSpinCount(isBonusSpin ? 0 : nextSpinCount);
 
+    // Trigger scatter rain at the start of the bonus spin (anticipation phase)
+    if (isBonusSpin) {
+      setShowBonusRain(true);
+      setTimeout(() => setShowBonusRain(false), 2200); // Keep it for full duration of spin
+    }
+
+    const bonusSymbol = SYMBOLS.find(s => s.id === 'bonus');
+
     setTimeout(() => {
       const newResult = [];
       for (let i = 0; i < 5; i++) {
         const reelSymbols = [
-          getRandomSymbol(!isBonusSpin), 
-          getRandomSymbol(!isBonusSpin), 
-          getRandomSymbol(!isBonusSpin)
+          getRandomSymbol(true), // always exclude bonus for normal symbols
+          getRandomSymbol(true),
+          getRandomSymbol(true)
         ];
-        
-        // If it's a bonus spin and no bonus symbol was rolled yet, force one on a random reel
-        if (isBonusSpin && i === Math.floor(Math.random() * 5)) {
-          reelSymbols[Math.floor(Math.random() * 3)] = SYMBOLS.find(s => s.id === 'bonus');
+
+        // On bonus spin, force bonus symbol into the middle row of every reel
+        if (isBonusSpin) {
+          reelSymbols[1] = bonusSymbol; // middle slot
         }
+
         newResult.push(reelSymbols);
       }
       setResult(newResult);
       setSpinning(false);
-      checkWin(newResult);
+
+      // On bonus spin, always open the bonus game directly
+      if (isBonusSpin) {
+        setTimeout(() => {
+          setShowBonus(true);
+          rainRef.current?.burst(VASILI_COMMENTS, 20);
+        }, 600);
+      } else {
+        checkWin(newResult);
+      }
     }, 2000);
   };
 
@@ -138,7 +158,7 @@ export default function App() {
     if (bonusCount >= 1) {
       setTimeout(() => {
         setShowBonus(true);
-        rainRef.current?.burst(VASILI_COMMENTS, 12);
+        rainRef.current?.burst(VASILI_COMMENTS, 20);
       }, 500); // Give it a moment after reels stop
       return;
     }
@@ -199,10 +219,12 @@ export default function App() {
           result={result}
           lastWin={lastWin}
           onWithdraw={() => setShowWithdraw(true)}
+          onAura={() => rainRef.current?.drop('да ты хоть штаны сними не поможет 😂')}
         />
       </main>
 
       <CommentRain ref={rainRef} />
+      <BonusRain active={showBonusRain} />
       <WithdrawOverlay show={showWithdraw} onClose={() => setShowWithdraw(false)} />
 
       <AnimatePresence>
@@ -213,7 +235,8 @@ export default function App() {
           onClose={(win) => {
             setShowBonus(false);
             if (win) setBalance(prev => prev + win);
-          }} 
+          }}
+          onAura={() => rainRef.current?.drop('да ты хоть штаны сними не поможет 😂')}
         />
       )}
     </div>

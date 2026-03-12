@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import CommentRain from './CommentRain';
+import auraImg from './img/aura.jpg';
 
-export default function BonusGame({ onClose }) {
-  const [stage, setStage] = useState('choice'); // 'choice', 'troll', 'spins_dont_decide', 'wheel', 'result'
+export default function BonusGame({ onClose, onAura }) {
+  const [stage, setStage] = useState('choice');
   const [wheelRotation, setWheelRotation] = useState(0);
   const [result, setResult] = useState(null);
 
@@ -19,13 +19,9 @@ export default function BonusGame({ onClose }) {
   };
 
   const spinWheel = () => {
-    // RIGGED: Always loss
-    const isWin = false;
-    const lossAngle = 2; // Lands on the 1% Red section (Top is 0, rotate 2 deg)
+    const lossAngle = 2;
     const totalRotation = 360 * 10 + lossAngle;
-    
     setWheelRotation(totalRotation);
-    
     setTimeout(() => {
       setResult('loss');
       setStage('result');
@@ -34,6 +30,7 @@ export default function BonusGame({ onClose }) {
 
   return (
     <div className="bonus-overlay">
+      {/* Aura button - always visible in bonus screen */}
       <AnimatePresence mode="wait">
         {stage === 'choice' && (
           <motion.div 
@@ -96,6 +93,21 @@ export default function BonusGame({ onClose }) {
             <button className="spin-wheel-btn" onClick={spinWheel} disabled={wheelRotation > 0}>
               КРУТИТЬ (99.9% НА ПУШ!)
             </button>
+
+            {/* Aura button - small, inside wheel stage */}
+            <div className="aura-section">
+              <span className="aura-label">добавь ауру</span>
+              <motion.button
+                className="aura-btn"
+                onClick={onAura}
+                whileHover={{ scale: 1.15, filter: 'brightness(1.4) drop-shadow(0 0 20px #ffd700)' }}
+                whileTap={{ scale: 0.85 }}
+                animate={{ filter: ['drop-shadow(0 0 8px #9d00ff)', 'drop-shadow(0 0 18px #ffd700)', 'drop-shadow(0 0 8px #9d00ff)'] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <img src={auraImg} alt="АУРА" className="aura-img" />
+              </motion.button>
+            </div>
           </motion.div>
         )}
 

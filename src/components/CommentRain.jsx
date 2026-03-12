@@ -4,22 +4,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 const CommentRain = forwardRef((props, ref) => {
   const [items, setItems] = useState([]);
 
+  const drop = (text) => {
+    const newItem = {
+      id: Math.random(),
+      text,
+      left: (5 + Math.random() * 80) + '%',
+      depth: Math.random() * 20,
+      duration: 3 + Math.random() * 2
+    };
+    setItems(prev => [...prev.slice(-40), newItem]);
+  };
+
   useImperativeHandle(ref, () => ({
-    drop(text) {
-      const newItem = {
-        id: Math.random(),
-        text,
-        left: (5 + Math.random() * 80) + '%',
-        depth: Math.random() * 20,
-        duration: 3 + Math.random() * 2
-      };
-      setItems(prev => [...prev.slice(-30), newItem]);
-    },
+    drop,
     burst(messages, count = 8) {
       for (let i = 0; i < count; i++) {
         setTimeout(() => {
-          this.drop(messages[Math.floor(Math.random() * messages.length)]);
-        }, i * (150 + Math.random() * 100));
+          drop(messages[Math.floor(Math.random() * messages.length)]);
+        }, i * (100 + Math.random() * 100));
       }
     }
   }));
@@ -35,16 +37,16 @@ const CommentRain = forwardRef((props, ref) => {
               y: 800, 
               opacity: 1, 
               scale: 1,
-              x: (Math.random() - 0.5) * 50 // Slight horizontal drift
+              x: (Math.random() - 0.5) * 50
             }}
             exit={{ opacity: 0 }}
             transition={{ duration: item.duration, ease: "linear" }}
             className="chat-comment"
             style={{ 
               left: item.left,
-              zIndex: 1000 + Math.floor(item.depth),
+              zIndex: 3000 + Math.floor(item.depth),
               fontSize: `${0.9 + item.depth/40}rem`,
-              opacity: 0.7 + item.depth/40,
+              opacity: 0.8 + item.depth/50,
               filter: `drop-shadow(0 0 10px var(--primary))`
             }}
           >
